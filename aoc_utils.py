@@ -9,20 +9,19 @@ def get_day_number():
     Returns:
     - int: The day number extracted from the filename.
     """
-    # Get the caller's frame
-    frame = inspect.stack()[1]
-    module = inspect.getmodule(frame[0])
-    if module is not None and hasattr(module, '__file__'):
-        filename = module.__file__
-    else:
-        raise ValueError("Cannot determine caller's filename.")
-
-    basename = os.path.basename(filename)
-    # Assuming the filename format is 'dayXX.py'
-    day_str = ''.join(filter(str.isdigit, basename))
-    if not day_str:
-        raise ValueError(f"No day number found in filename '{basename}'.")
-    return int(day_str)
+    # Traverse the call stack to find the first caller outside of aoc_utils.py
+    for frame_info in inspect.stack():
+        module = inspect.getmodule(frame_info.frame)
+        if module is not None and hasattr(module, '__file__'):
+            filename = module.__file__
+            basename = os.path.basename(filename)
+            if basename != 'aoc_utils.py':
+                # Assuming the filename format is 'dayXX.py'
+                day_str = ''.join(filter(str.isdigit, basename))
+                if not day_str:
+                    raise ValueError(f"No day number found in filename '{basename}'.")
+                return int(day_str)
+    raise ValueError("Cannot determine caller's filename.")
 
 def get_input(day=None, filename=None, sample=False):
     """
@@ -47,7 +46,7 @@ def get_input(day=None, filename=None, sample=False):
         with open(input_filename, 'r') as file:
             input_lines = [line.rstrip('\n') for line in file]
     except FileNotFoundError:
-        raise FileNotFoundError(f"Input file {input_filename} not found.")
+        raise FileNotFoundError(f"Input file '{input_filename}' not found.")
     return input_lines
 
 def timer(func):
