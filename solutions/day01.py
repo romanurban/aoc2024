@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from aoc_utils import get_input, timer
 
 @timer
@@ -47,7 +51,6 @@ def part2(input_lines):
     return total_score
 
 def main():
-    import sys
     sample_mode = '--test' in sys.argv
     timing_enabled = '--time' in sys.argv
 
