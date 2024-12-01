@@ -1,4 +1,4 @@
-from aoc_utils import get_input, timer
+from utils.aoc_utils import get_input, timer
 
 @timer
 def part1(input_lines):

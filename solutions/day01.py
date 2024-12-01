@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from aoc_utils import get_input, timer
+from utils.aoc_utils import get_input, timer
 
 @timer
 def part1(input_lines):
@@ -24,10 +24,6 @@ def part1(input_lines):
 
     total_difference = sum(differences)
 
-    #print("left list:", left)
-    #print("right list:", right)
-    #print("differences:", differences)
-    #print("total difference:", total_difference)
     return total_difference
 
 @timer
@@ -39,15 +35,21 @@ def part2(input_lines):
         if len(values) >= 2:
             left.append(int(values[0]))
             right.append(int(values[1]))
-    
+
+    left.sort()
+    right.sort()
+
     similarity_score = []
     for l in left:
         frequency = right.count(l)
         score = frequency * l
         similarity_score.append(score)
-    
+
+    #print("left list:", left)
+    #print("right list:", right)
+    #print("similarity score:", similarity_score)
+
     total_score = sum(similarity_score)
-    #print("total score:", total_score)
     return total_score
 
 def main():
@@ -65,5 +67,5 @@ def main():
     result2 = part2(input_lines)
     print(f"Part 2 Result: {result2}")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
