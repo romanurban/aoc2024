@@ -1,6 +1,11 @@
 import os
 import inspect
 import time
+import logging
+
+def configure_logging(debug=False):
+    level = logging.DEBUG if debug else logging.INFO
+    logging.basicConfig(level=level, format='%(levelname)s - %(message)s')
 
 def get_day_number():
     """
