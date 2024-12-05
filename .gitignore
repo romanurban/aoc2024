@@ -1,9 +1,14 @@
-# Ignore everything in the inputs directory
-inputs/
+# Ignore all files inside the inputs directory
 inputs/*
 
-# Don't ignore files ending with _sample.txt
+# Don't ignore the inputs directory itself
+!inputs/
+
+# Don't ignore files ending with _sample.txt in inputs directory
 !inputs/*_sample.txt
+
+# If you have subdirectories inside inputs and want to include _sample.txt files from them
+!inputs/**/*_sample.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
