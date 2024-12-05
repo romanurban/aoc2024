@@ -1,4 +1,9 @@
+# Ignore everything in the inputs directory
 inputs/
+inputs/*
+
+# Don't ignore files ending with _sample.txt
+!inputs/*_sample.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
