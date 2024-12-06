@@ -11,7 +11,9 @@ def parse_input(input_lines):
 def simulate_movement(grid):
     directions = {'^': (-1, 0), 'v': (1, 0), '<': (0, -1), '>': (0, 1)}
     right_turn = {'^': '>', 'v': '<', '<': '^', '>': 'v'}
-    visited = set()
+
+    # Find initial position and direction
+    x_pos, y_pos, direction = None, None, None
     for x, row in enumerate(grid):
         for y, cell in enumerate(row):
             if cell in directions:
@@ -19,30 +21,39 @@ def simulate_movement(grid):
                 dx, dy = directions[cell]
                 x_pos, y_pos = x, y
                 break
-        else:
-            continue
-        break
+        if direction is not None:
+            break
 
     max_rows = len(grid)
     max_cols = len(grid[0])
-    visited.add((x_pos, y_pos))  # Add the initial position to visited
-    while True:
-        # Check if next position is within bounds and not an obstacle
-        next_x, next_y = x_pos + dx, y_pos + dy
-        if not (0 <= next_x < max_rows and 0 <= next_y < max_cols):
-            break
-        if grid[next_x][next_y] == '#':
-            # Turn 90 degrees to the right
-            direction = right_turn[direction]
-            dx, dy = directions[direction]
-            continue
-        # Move to the next position
-        x_pos += dx
-        y_pos += dy
-        # Mark current position as visited
-        visited.add((x_pos, y_pos))
+    
+    # Track visited states: (x_pos, y_pos, direction)
+    visited_states = set()
+    visited_states.add((x_pos, y_pos, direction))
 
-    return visited
+    while True:
+        dx, dy = directions[direction]
+        next_x, next_y = x_pos + dx, y_pos + dy
+
+        if not (0 <= next_x < max_rows and 0 <= next_y < max_cols):
+            # Out of bounds -> stop
+            break
+
+        if grid[next_x][next_y] == '#':
+            # Turn right and continue
+            direction = right_turn[direction]
+            continue
+
+        # Move to the next cell
+        x_pos, y_pos = next_x, next_y
+
+        # Check if this state has been visited before
+        current_state = (x_pos, y_pos, direction)
+        if current_state in visited_states:
+            return "Infinite loop detected"
+        visited_states.add(current_state)
+
+    return visited_states
 
 @timer
 def part1(input_lines):
@@ -51,12 +62,30 @@ def part1(input_lines):
     logging.debug(f"Visited positions: {visited}")
     return len(visited)
 
+@timer
+def part2(input_lines):
+    grid = parse_input(input_lines)
+    max_rows = len(grid)
+    max_cols = len(grid[0])
+    loop_count = 0
+    for x in range(max_rows):
+        for y in range(max_cols):
+            if grid[x][y] == '.':
+                grid[x][y] = '#'
+                result = simulate_movement(grid)
+                if result == "Infinite loop detected":
+                    loop_count += 1
+                grid[x][y] = '.'  # Reset the obstacle
+    return loop_count
+
 def main():
     sample_mode = '--test' in sys.argv
     input_lines = get_input(day=6, sample=sample_mode)
     configure_logging(debug='--debug' in sys.argv)
     unique_visited_count = part1(input_lines)
     logging.info(f"Unique visited tiles count: {unique_visited_count}")
+    loop_count = part2(input_lines)
+    logging.info(f"Number of tiles causing infinite loops: {loop_count}")
 
 if __name__ == "__main__":
     main()
