@@ -7,56 +7,100 @@ from utils.aoc_utils import get_input, timer, configure_logging
 @timer
 def part1(input_lines):
     input_string = input_lines[0].strip()
-    data_blocks = ''.join([input_string[i] for i in range(len(input_string)) if i % 2 == 0])
-    free_blocks = ''.join([input_string[i] for i in range(len(input_string)) if i % 2 != 0])
-    data_blocks_decoded = [str(i) * int(data_blocks[i]) for i in range(len(data_blocks))]
-    free_blocks_decoded = ["." * int(free_blocks[i]) for i in range(len(free_blocks))]
+    data_blocks = [int(input_string[i]) for i in range(0, len(input_string), 2)]
+    free_blocks = [int(input_string[i]) for i in range(1, len(input_string), 2)]
 
-    logging.debug(f"Data blocks: {data_blocks}")
-    logging.debug(f"Data blocks decoded: {data_blocks_decoded}")
-    logging.debug(f"Free blocks: {free_blocks}")
-    logging.debug(f"Free blocks decoded: {free_blocks_decoded}")
+    # Build initial disk representation with correct file IDs
+    disk = []
+    file_id = 0
+    num_files = len(data_blocks)
+    for idx in range(num_files):
+        data_size = data_blocks[idx]
+        disk.extend([file_id] * data_size)
+        if idx < len(free_blocks):
+            free_size = free_blocks[idx]
+            disk.extend([-1] * free_size)
+        file_id += 1
 
-    joined = join_alternating(data_blocks_decoded, free_blocks_decoded)
-    logging.debug(f"Resulting string: {joined}")
+    # Compact the disk
+    first_free = 0
+    last_block = len(disk) - 1
+    while first_free < last_block:
+        # Find the first free space from the left
+        while first_free < last_block and disk[first_free] != -1:
+            first_free += 1
+        # Find the last file block from the right
+        while last_block > first_free and disk[last_block] == -1:
+            last_block -= 1
+        if first_free < last_block:
+            # Move the file block to the free space
+            disk[first_free] = disk[last_block]
+            disk[last_block] = -1
+            first_free += 1
+            last_block -= 1
 
-    dot_tail = ''
-    for char in reversed(joined):
-        if char.isdigit():
-            joined = joined.replace('.', char, 1)
-            joined = joined[:-1]
-            dot_tail += '.'
-        elif char == '.':
-            dot_tail += '.'
-            joined = joined[:-1]
-        if '.' not in joined:
-            break
-
-    res_str = joined + dot_tail
-
-    logging.debug(f"Current string: {res_str}")
-
-    sum = 0
-    for i in range(len(res_str)):
-        if res_str[i].isdigit():
-            sum += int(res_str[i]) * i
-
-    return sum
-
-def join_alternating(data_blocks_decoded, free_blocks_decoded):
-    result = []
-    min_len = min(len(data_blocks_decoded), len(free_blocks_decoded))
-    for i in range(min_len):
-        result.append(data_blocks_decoded[i])
-        result.append(free_blocks_decoded[i])
-    result.extend(data_blocks_decoded[min_len:] + free_blocks_decoded[min_len:])
-    return ''.join(result)
-
+    # Calculate checksum
+    checksum = sum(i * disk[i] for i in range(len(disk)) if disk[i] != -1)
+    return checksum
 
 @timer
 def part2(input_lines):
-    # Your Part 2 code
-    pass
+    input_string = input_lines[0].strip()
+    data_blocks = [int(input_string[i]) for i in range(0, len(input_string), 2)]
+    free_blocks = [int(input_string[i]) for i in range(1, len(input_string), 2)]
+
+    # Build initial disk representation with file IDs and free spaces
+    disk = []
+    file_positions = {}  # Track start positions and sizes of files
+    file_id = 0
+    idx = 0
+    for data_size, free_size in zip(data_blocks, free_blocks):
+        disk.extend([file_id] * data_size)
+        file_positions[file_id] = (idx, data_size)  # (start_index, size)
+        idx += data_size
+        disk.extend([-1] * free_size)
+        idx += free_size
+        file_id += 1
+
+    # Handle any remaining data blocks
+    for data_size in data_blocks[len(free_blocks):]:
+        disk.extend([file_id] * data_size)
+        file_positions[file_id] = (idx, data_size)
+        idx += data_size
+        file_id += 1
+
+    # Move files in decreasing order of file ID
+    for fid in range(file_id - 1, -1, -1):
+        start_idx, size = file_positions[fid]
+        # Find leftmost suitable free space before the file
+        left_space_start = None
+        left_space_length = 0
+        temp_length = 0
+        temp_start = None
+
+        for i in range(start_idx):
+            if disk[i] == -1:
+                if temp_start is None:
+                    temp_start = i
+                temp_length += 1
+                if temp_length >= size:
+                    left_space_start = temp_start
+                    break
+            else:
+                temp_length = 0
+                temp_start = None
+
+        if left_space_start is not None:
+            # Move the file to the leftmost suitable free space
+            for i in range(size):
+                disk[left_space_start + i] = fid
+                disk[start_idx + i] = -1
+            # Update file's new position
+            file_positions[fid] = (left_space_start, size)
+
+    # Calculate checksum
+    checksum = sum(i * disk[i] for i in range(len(disk)) if disk[i] != -1)
+    return checksum
 
 def main():
     sample_mode = '--test' in sys.argv
